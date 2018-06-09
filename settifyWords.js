@@ -1,17 +1,40 @@
-// CSS class notes
-// <section id="primary" seems to capture the content of the page not the ads
-// example URL https://www.slugmag.com/beer-reviews/beer-month-rino-apa/
-/*
-const url = 'https://www.slugmag.com/beer-reviews/beer-month-rino-apa/'
-//const fs = require('fs');
-//const body = fs.readFileSync('beer.html').toString();
+let url = 'https://www.slugmag.com/beer-reviews/beer-month-rino-apa/'
+const cheerio = require('cheerio');
+const request = require('sync-request');
+const fs = require ('fs');
+let article = '';
 
-const stringStart = '<section id="primary"';
-const stringEnd = '</section';
-const posStart = body.indexOf(stringStart);
-const posEnd = body.indexOf(stringEnd);
-const sectionLength = posEnd - posStart
-const sectionHTML = body.substr(posStart,sectionLength); 
+var path = url.substr('https://www.slugmag.com/'.length,url.length - 'https://www.slugmag.com/'.length);
+filename = path.replace(/\//g,'__');
+let filepath = './filedb/'+filename
+
+if (!fs.existsSync('./filedb/'+filename)) {
+  article = request('GET',url);
+  article = article.getBody();
+  console.log(filename);
+  console.log('Article downloaded.');
+  fs.writeFileSync('./filedb/'+filename,article);
+} else {
+  article = fs.readFileSync('./filedb/'+filename).toString();
+  console.log('Article read from file system.')
+}
+filepath += 'set'
+
+let stringStart = '<section id="primary"';
+let stringEnd = '</section';
+
+
+let posStart = article.indexOf(stringStart);
+if (posStart === -1) {posStart = 0;};
+let posEnd = article.indexOf(stringEnd);
+if (posEnd === -1) {posEnd = article.length;};
+let sectionLength = posEnd - posStart
+let sectionHTML = article.substr(posStart,sectionLength);
+
+if (sectionHTML.indexOf('adsbygoogle') > -1) {
+  sectionHTML = sectionHTML.substr(0,sectionHTML.indexOf('adsbygoogle'));
+};
+
 
 var removeTags = (HTML) => {
   HTML = HTML.toLowerCase();
@@ -66,27 +89,29 @@ var settifyWords = (text) => {
   return new Set(words);
 };
 
-console.log(settifyWords(filterForLetters(removeTags(sectionHTML))));
-*/
-const url = 'https://www.slugmag.com/beer-reviews/beer-month-rino-apa/'
-const cheerio = require('cheerio');
-const request = require('sync-request');
-const fs = require ('fs');
-let article = '';
-
-var path = url.substr('https://www.slugmag.com/'.length,url.length - 'https://www.slugmag.com/'.length);
-filename = path.replace(/\//g,'__');
-
-if (!fs.existsSync('./filedb/'+filename)) {
-  article = request('GET',url);
-  console.log(filename);
-  console.log('Article downloaded.');
-  fs.writeFileSync('./filedb/'+filename,article);
-} else {
-  article = fs.readFileSync('./filedb/'+filename);
-  console.log('Article read from file system.')
+var theSet = settifyWords(filterForLetters(removeTags(sectionHTML)));
+article = theSet;
+if (!fs.existsSync(filepath)) {
+  fs.writeFileSync(filepath,theSet=[...theSet]);
 }
-console.log(article.length);
-console.info(article.length);
 
+//var hi = fs.readFileSync(filepath).toString().split(',');
 
+var master = fs.readFileSync('./filedb/_master').toString().trim().split(',');
+
+function leftdiff(setA, arrayB) {
+    for (var i = 0; i < arrayB.length; i++) {
+        setA.delete(arrayB[i]); 
+        console.log([...setA].length);
+
+//        console.log(arrayB[i],' deleted from setA');
+    }
+    return setA;
+}
+
+var setA = new Set([1,2,3]);
+var arrayB = [2,3,4];
+console.log(leftdiff(setA, arrayB));
+console.log(leftdiff(article,master));
+
+console.log(master)
