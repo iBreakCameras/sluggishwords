@@ -1,0 +1,6 @@
+
+wget -nc https://www.slugmag.com \
+--reject '*.js,*.css,*.ico,*.txt,*.gif,*.jpg,*.jpeg,*.png,*.mp3,*.pdf,*.tgz,*.flv,*.avi,*.mpeg,*.iso'
+
+
+
